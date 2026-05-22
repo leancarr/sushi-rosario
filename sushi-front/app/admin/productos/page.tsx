@@ -24,10 +24,71 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Plus, Pencil, Search } from 'lucide-react'
+import { Plus, Pencil, Search, History, Eye } from 'lucide-react'
 import { mockProducts, mockCombos } from '@/lib/mock-data'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
+import { ScrollArea } from '@/components/ui/scroll-area'
+
+// Product history type
+interface ProductHistoryItem {
+  id: string
+  fecha: Date
+  campo: string
+  valorAnterior: string
+  valorNuevo: string
+  usuario: string
+}
+
+// Mock product history
+const mockProductHistory: Record<string, ProductHistoryItem[]> = {
+  p1: [
+    {
+      id: 'h1',
+      fecha: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      campo: 'Precio Mostrador',
+      valorAnterior: '$4,200',
+      valorNuevo: '$4,500',
+      usuario: 'Roberto Sushi',
+    },
+    {
+      id: 'h2',
+      fecha: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      campo: 'Descripcion',
+      valorAnterior: '8 piezas de roll con salmon',
+      valorNuevo: '8 piezas de roll con salmon fresco, palta y queso crema',
+      usuario: 'Roberto Sushi',
+    },
+    {
+      id: 'h3',
+      fecha: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+      campo: 'Precio PedidosYa',
+      valorAnterior: '$5,000',
+      valorNuevo: '$5,400',
+      usuario: 'Roberto Sushi',
+    },
+  ],
+  p2: [
+    {
+      id: 'h4',
+      fecha: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+      campo: 'Disponible',
+      valorAnterior: 'No',
+      valorNuevo: 'Si',
+      usuario: 'Laura Cocina',
+    },
+  ],
+  p3: [
+    {
+      id: 'h5',
+      fecha: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      campo: 'Precio Mostrador',
+      valorAnterior: '$4,500',
+      valorNuevo: '$4,800',
+      usuario: 'Roberto Sushi',
+    },
+  ],
+}
 
 export default function ProductosPage() {
   const [products, setProducts] = React.useState(mockProducts)
@@ -35,6 +96,7 @@ export default function ProductosPage() {
   const [search, setSearch] = React.useState('')
   const [isAddProductOpen, setIsAddProductOpen] = React.useState(false)
   const [isAddComboOpen, setIsAddComboOpen] = React.useState(false)
+  const [selectedProductHistory, setSelectedProductHistory] = React.useState<string | null>(null)
 
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
@@ -54,6 +116,10 @@ export default function ProductosPage() {
     setCombos((prev) =>
       prev.map((c) => (c.id === id ? { ...c, available: !c.available } : c))
     )
+  }
+
+  const getProductHistory = (productId: string): ProductHistoryItem[] => {
+    return mockProductHistory[productId] || []
   }
 
   return (
@@ -149,38 +215,56 @@ export default function ProductosPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredProducts.map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{product.name}</p>
-                            <p className="text-xs text-muted-foreground truncate max-w-xs">
-                              {product.description}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{product.category}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          ${product.priceMostrador.toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right text-muted-foreground">
-                          ${product.pricePedidosYa.toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          <Switch
-                            checked={product.available}
-                            onCheckedChange={() => toggleProductAvailability(product.id)}
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="icon">
-                            <Pencil className="size-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {filteredProducts.map((product) => {
+                      const history = getProductHistory(product.id)
+                      return (
+                        <TableRow key={product.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{product.name}</p>
+                              <p className="text-xs text-muted-foreground truncate max-w-xs">
+                                {product.description}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{product.category}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            ${product.priceMostrador.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            ${product.pricePedidosYa.toLocaleString()}
+                          </TableCell>
+                          <TableCell>
+                            <Switch
+                              checked={product.available}
+                              onCheckedChange={() => toggleProductAvailability(product.id)}
+                            />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              {history.length > 0 && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setSelectedProductHistory(product.id)}
+                                  className="relative"
+                                >
+                                  <History className="size-4" />
+                                  <span className="absolute -top-1 -right-1 size-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
+                                    {history.length}
+                                  </span>
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="icon">
+                                <Pencil className="size-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -284,6 +368,51 @@ export default function ProductosPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Product History Dialog */}
+      <Dialog open={!!selectedProductHistory} onOpenChange={() => setSelectedProductHistory(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="size-5" />
+              Historial de Cambios
+            </DialogTitle>
+            <DialogDescription>
+              {selectedProductHistory && products.find((p) => p.id === selectedProductHistory)?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[400px]">
+            <div className="space-y-4 pr-4">
+              {selectedProductHistory &&
+                getProductHistory(selectedProductHistory).map((item) => (
+                  <div key={item.id} className="p-4 rounded-lg bg-muted space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline">{item.campo}</Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {item.fecha.toLocaleDateString('es-AR')} - {item.usuario}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Anterior</p>
+                        <p className="line-through text-muted-foreground">{item.valorAnterior}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Nuevo</p>
+                        <p className="font-medium text-success">{item.valorNuevo}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </ScrollArea>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedProductHistory(null)}>
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   )
 }

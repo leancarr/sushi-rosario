@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -15,6 +15,10 @@ import {
   Moon,
   Sun,
   ChefHat,
+  Clock,
+  Tag,
+  ShieldCheck,
+  User,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 
@@ -35,17 +39,22 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { AIChatbot } from '@/components/layout/ai-chatbot'
+
+export type UserRole = 'empleado' | 'admin'
 
 const adminNavItems = [
   {
     title: 'Dashboard',
     url: '/admin',
     icon: LayoutDashboard,
-  },
-  {
-    title: 'Panel de Control',
-    url: '/admin/dashboard',
-    icon: ClipboardList,
   },
   {
     title: 'Inventario',
@@ -56,6 +65,11 @@ const adminNavItems = [
     title: 'Productos',
     url: '/admin/productos',
     icon: ShoppingCart,
+  },
+  {
+    title: 'Promociones',
+    url: '/admin/promociones',
+    icon: Tag,
   },
   {
     title: 'Precios',
@@ -74,20 +88,71 @@ const adminNavItems = [
   },
 ]
 
+const employeeNavItems = [
+  {
+    title: 'Caja / POS',
+    url: '/caja',
+    icon: ShoppingCart,
+  },
+  {
+    title: 'Fichaje',
+    url: '/fichaje',
+    icon: Clock,
+  },
+]
+
 const operationsNavItems = [
   {
     title: 'Pedidos',
     url: '/pedidos',
     icon: ClipboardList,
   },
-  {
-    title: 'Caja / POS',
-    url: '/caja',
-    icon: ShoppingCart,
-  },
 ]
 
-function AppSidebar() {
+interface RoleSwitcherProps {
+  role: UserRole
+  onRoleChange: (role: UserRole) => void
+}
+
+function RoleSwitcher({ role, onRoleChange }: RoleSwitcherProps) {
+  return (
+    <div className="p-2">
+      <Select value={role} onValueChange={(value) => onRoleChange(value as UserRole)}>
+        <SelectTrigger className="w-full bg-sidebar-accent/50 border-sidebar-border text-sidebar-foreground">
+          <div className="flex items-center gap-2">
+            {role === 'admin' ? (
+              <ShieldCheck className="size-4 text-primary" />
+            ) : (
+              <User className="size-4" />
+            )}
+            <SelectValue />
+          </div>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="empleado">
+            <div className="flex items-center gap-2">
+              <User className="size-4" />
+              <span>Empleado</span>
+            </div>
+          </SelectItem>
+          <SelectItem value="admin">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="size-4" />
+              <span>Administrador</span>
+            </div>
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
+
+interface AppSidebarProps {
+  role: UserRole
+  onRoleChange: (role: UserRole) => void
+}
+
+function AppSidebar({ role, onRoleChange }: AppSidebarProps) {
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
@@ -112,7 +177,15 @@ function AppSidebar() {
 
       <SidebarSeparator />
 
+      {/* Role Switcher */}
+      <div className="group-data-[collapsible=icon]:hidden">
+        <RoleSwitcher role={role} onRoleChange={onRoleChange} />
+      </div>
+
+      <SidebarSeparator className="group-data-[collapsible=icon]:hidden" />
+
       <SidebarContent>
+        {/* Common Operations */}
         <SidebarGroup>
           <SidebarGroupLabel>Operaciones</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -135,11 +208,12 @@ function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* Employee Menu */}
         <SidebarGroup>
-          <SidebarGroupLabel>Administración</SidebarGroupLabel>
+          <SidebarGroupLabel>Empleado</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {adminNavItems.map((item) => (
+              {employeeNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
@@ -156,6 +230,31 @@ function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Admin Menu - Only visible when admin role */}
+        {role === 'admin' && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Administracion</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminNavItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === item.url || pathname.startsWith(item.url + '/')}
+                      tooltip={item.title}
+                    >
+                      <Link href={item.url}>
+                        <item.icon className="size-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="p-4">
@@ -181,7 +280,7 @@ function AppSidebar() {
             className="size-8 group-data-[collapsible=icon]:hidden"
           >
             <Settings className="size-4" />
-            <span className="sr-only">Configuración</span>
+            <span className="sr-only">Configuracion</span>
           </Button>
         </div>
       </SidebarFooter>
@@ -220,13 +319,28 @@ interface AppShellProps {
 }
 
 export function AppShell({ children, title, description, actions }: AppShellProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const [role, setRole] = React.useState<UserRole>('admin')
+
+  // Redirect to appropriate page when role changes
+  const handleRoleChange = (newRole: UserRole) => {
+    setRole(newRole)
+    // If switching to employee and on admin page, redirect to caja
+    if (newRole === 'empleado' && pathname.startsWith('/admin')) {
+      router.push('/caja')
+    }
+  }
+
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar role={role} onRoleChange={handleRoleChange} />
       <SidebarInset>
         <AppHeader title={title} description={description} actions={actions} />
         <main className="flex-1 overflow-auto p-6">{children}</main>
       </SidebarInset>
+      {/* Global AI Chatbot */}
+      <AIChatbot />
     </SidebarProvider>
   )
 }
