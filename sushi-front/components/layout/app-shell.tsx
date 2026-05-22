@@ -43,6 +43,11 @@ const adminNavItems = [
     icon: LayoutDashboard,
   },
   {
+    title: 'Panel de Control',
+    url: '/admin/dashboard',
+    icon: ClipboardList,
+  },
+  {
     title: 'Inventario',
     url: '/admin/inventario',
     icon: Package,
