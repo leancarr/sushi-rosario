@@ -337,7 +337,7 @@ export function AppShell({ children, title, description, actions }: AppShellProp
       <AppSidebar role={role} onRoleChange={handleRoleChange} />
       <SidebarInset>
         <AppHeader title={title} description={description} actions={actions} />
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6">{children}</main>
       </SidebarInset>
       {/* Global AI Chatbot */}
       <AIChatbot />

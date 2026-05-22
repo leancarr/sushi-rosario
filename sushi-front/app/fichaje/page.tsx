@@ -119,7 +119,7 @@ export default function FichajePage() {
             <div className="text-center space-y-4">
               {/* Digital Clock */}
               <div className="relative">
-                <div className="text-7xl font-mono font-bold tracking-wider text-foreground">
+                <div className="text-5xl font-mono font-bold tracking-wider text-foreground">
                   {formatTime(currentTime)}
                 </div>
                 <p className="text-muted-foreground mt-2 capitalize">
@@ -177,7 +177,7 @@ export default function FichajePage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Clock className="size-5" />
+              <Clock className="size-4" />
               Mis fichajes de hoy
             </CardTitle>
           </CardHeader>

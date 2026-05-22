@@ -185,7 +185,7 @@ export default function EmpleadosPage() {
             </Card>
 
             {/* Employees Table */}
-            <Card>
+            <Card className="overflow-hidden w-full">
               <CardHeader>
                 <CardTitle>Lista de Empleados</CardTitle>
               </CardHeader>
@@ -261,10 +261,10 @@ export default function EmpleadosPage() {
             </Card>
 
             {/* Attendance Table */}
-            <Card>
+            <Card className="overflow-hidden w-full">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Clock className="size-5" />
+                  <Clock className="size-4" />
                   Registro de Asistencias
                 </CardTitle>
               </CardHeader>
